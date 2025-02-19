@@ -1,0 +1,74 @@
+version: "3"
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: comlab-api-app
+    container_name: app-comlab
+    restart: unless-stopped
+    environment:
+      DB_HOST: db
+      DB_PASSWORD: root
+      DB_NAME: comlab-api
+      NEW_RELIC_LICENSE_KEY: "979876708234d6408828bf0918bb458d8674NRAL"
+      NEW_RELIC_APPNAME: "comlab Micro Service - Test"
+    networks:
+      - comlab-api
+    volumes:
+      - ./:/var/www
+      - ./docker/php.ini:/usr/local/etc/php/conf.d/local.ini
+
+  webserver:
+    build:
+      context: .
+      dockerfile: Dockerfile_Nginx
+    image: comlab-api-nginx 
+    container_name: webserver-comlab 
+    restart: unless-stopped
+    ports:
+      - "8181:80"
+    volumes:
+      - ./:/var/www
+    networks:
+      - comlab-api
+    depends_on:
+      - app  
+
+  # newrelic-php-daemon: 
+  #   image: newrelic/php-daemon:latest 
+  
+  mailpit:
+    image: 'axllent/mailpit:latest'
+    ports:
+      - '${FORWARD_MAILPIT_PORT:-1025}:1025'
+      - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
+    networks:
+      - comlab-api
+
+  db:
+    image: mariadb:10.3.36
+    command: --max_allowed_packet=32505856 --character-set-server=utf8 --collation-server=utf8_general_ci
+    container_name: db-comlab
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: comlab-api
+      MARIADB_ROOT_PASSWORD: root
+    networks:
+      - comlab-api
+    volumes:
+      - dbdata:/var/lib/mysql/
+  phpmyadmin:
+    image: phpmyadmin
+    ports:
+        - ${PHP_MY_ADMIN_PORT:-8001}:80
+    networks:
+      - comlab-api    
+    depends_on:
+        - db  
+networks:
+  comlab-api:
+    driver: bridge
+volumes:
+  dbdata:   
+    driver: local 
