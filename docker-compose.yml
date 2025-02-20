@@ -27,7 +27,7 @@ services:
     container_name: webserver-comlab 
     restart: unless-stopped
     ports:
-      - "8181:80"
+      - "8080:80"
     volumes:
       - ./:/var/www
     networks:
@@ -61,7 +61,7 @@ services:
   phpmyadmin:
     image: phpmyadmin
     ports:
-        - ${PHP_MY_ADMIN_PORT:-8001}:80
+        - ${PHP_MY_ADMIN_PORT:-8000}:80
     networks:
       - comlab-api    
     depends_on:
